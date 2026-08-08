@@ -3,7 +3,7 @@
 Rust macro that automatically downloads, caches, and embeds Google Fonts into a Dioxus app at compile-time for offline
 usage
 
-## Usage
+## The macro
 
 This crate provides the `dioxus_google_font_embedder::embed_google_font!()` macro, which takes a URL provided by
 the [Google Fonts CSS API 2](https://developers.google.com/fonts/docs/css2), (which is easily obtainable via
@@ -11,6 +11,18 @@ the [google fonts website](https://fonts.google.com/)), and automatically, at **
 CSS and font files from google fonts, caches them, and embeds them with the [dioxus
 `asset!()` macro](https://dioxuslabs.com/learn/0.7/essentials/ui/assets/) so they can be self-hosted (web) or used
 offline (desktop/mobile).
+
+## Usage
+
+- Go to [google fonts](https://fonts.google.com/)
+- find your font(s)
+- click `Get font`
+- click `Get embed code`
+- copy the `fonts.googleapis.com/css2` URL inside the `<link href="..." rel="stylesheet">` tag
+
+![img.png](img.png)
+
+- insert `{dioxus_google_font_embedder::embed_google_font!("<URL GOES HERE>")}` into your `rsx!`
 
 ## Minimal Example
 
