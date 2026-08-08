@@ -1,10 +1,19 @@
 [package]
 name = "dioxus_google_font_embedder"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Machine on a Mission <machineonamission@gmail.com>"]
 edition = "2024"
+license = "AGPL-3.0-or-later"
+description = "Rust macro that automatically downloads, caches, and embeds Google Fonts into a Dioxus app at compile-time for offline usage"
+homepage = "https://github.com/machineonamission/dioxus_google_font_embedder"
+repository = "https://github.com/machineonamission/dioxus_google_font_embedder"
+readme = "README.md"
+keywords = ["dioxus", "google-fonts", "macro", "compile-time", "embedding"]
+categories = ["gui", "web-programming"]
+
 [lib]
 proc-macro = true
+
 [dependencies]
 syn = { version = "3.0.3", features = ["full"] }
 quote = "1.0.47"
