@@ -1,6 +1,6 @@
 [package]
 name = "dioxus_google_font_embedder"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Machine on a Mission <machineonamission@gmail.com>"]
 edition = "2024"
 license = "LGPL-3.0-or-later"
@@ -19,6 +19,6 @@ proc-macro = true
 syn = { version = "3.0.3", features = ["full"] }
 quote = "1.0.47"
 proc-macro2 = "1.0.107"
-ureq = "3.3.0"  # blocking HTTP client — important, see note below
+ureq = "3.4.0"  # blocking HTTP client
 regex = "1.13.1"
 md5 = "0.8.1"

@@ -7,8 +7,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.1", features = [] }
-dioxus_google_font_embedder = { version = "0.1.0", path = ".." }
+dioxus = { version = "0.7.10", features = [] }
+dioxus_google_font_embedder = "1"
 
 [features]
 default = ["web"]

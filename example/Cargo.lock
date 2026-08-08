@@ -1400,7 +1400,9 @@ dependencies = [
 
 [[package]]
 name = "dioxus_google_font_embedder"
-version = "0.1.0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "299af997f95ca2fa45aade65951e6d15b73ae60e0719445f94bda6a521b7dc37"
 dependencies = [
  "md5",
  "proc-macro2",
