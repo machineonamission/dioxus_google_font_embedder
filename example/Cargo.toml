@@ -1,0 +1,17 @@
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["Machine on a Mission <machineonamission@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { version = "0.7.1", features = [] }
+dioxus_google_font_embedder = { version = "0.1.0", path = ".." }
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]

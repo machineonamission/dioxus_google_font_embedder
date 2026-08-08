@@ -11,12 +11,13 @@ pub(crate) fn download_to_file(url: &str, path: &PathBuf) {
     std::io::copy(&mut resp.into_body().into_reader(), &mut file).unwrap();
 }
 
-pub(crate) fn cached_download(url: &str, cache_dir: &PathBuf) -> String {
-    let hash = format!("{:x}", md5::compute(url));
+pub(crate) fn cached_download(url: &str, cache_dir: &PathBuf) -> PathBuf {
+    let extension = url.rsplit('.').next().unwrap();
+    let hash = format!("{:x}.{extension}", md5::compute(url));
     let file = cache_dir.join(&hash);
 
     if !file.exists() {
         download_to_file(url, &file);
     }
-    file.into_os_string().into_string().unwrap()
+    file
 }

@@ -5,16 +5,19 @@ mod googlefontsapi;
 use crate::googlefontsapi::{cached_download};
 use proc_macro::TokenStream;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use quote::quote;
 use regex::Regex;
 use syn::LitStr;
 
+fn root_dir() -> PathBuf {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    PathBuf::from(manifest_dir)
+}
 
 fn cache_dir() -> PathBuf {
     // appropriate place to save files
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-    let cache_dir = std::path::Path::new(&manifest_dir).join("target").join("google-fonts-cache");
+    let cache_dir =  root_dir().join("target").join("google-fonts-cache");
     fs::create_dir_all(&cache_dir).unwrap();
     cache_dir
 }
@@ -44,22 +47,31 @@ fn expand(url: &str) -> proc_macro2::TokenStream {
         "url({})"
     });
 
-    let csshash = format!("{:x}.css", md5::compute(&*css));
-    let css_format_file = cache_dir.join(&csshash).into_os_string().into_string().unwrap();
 
-    fs::write(&css_format_file, css.as_str()).unwrap();
+    let csshash = format!("{:x}.patch.css", md5::compute(&*url));
+    let css_format_file = cache_dir.join(&csshash);
+    // let css_rel = format!("/{}", css_format_file.strip_prefix(&root_dir).unwrap().display());
+    if !css_format_file.exists() {
+        fs::write(&css_format_file, css.as_str()).unwrap();
+    }
+
     // dbg!(&urls, &css);
+    let root_dir =  root_dir();
 
     let paths = urls.iter().map(|url| {
         // let filename = url.rsplit('/').next().unwrap();
         // let path = cache_dir.join(filename);
-        cached_download(url, &cache_dir)
+        let abs_path = cached_download(url, &cache_dir);
+        let rel_path = abs_path.strip_prefix(&root_dir).unwrap();
+        format!("/{}", rel_path.display())
     }).collect::<Vec<String>>();
+
+    let cfstring = css_format_file.display().to_string();
 
     quote! {
         rsx! {
             style {
-                { format!(include_str!(#css_format_file), #(asset!(#paths)),*) }
+                { format!(include_str!(#cfstring), #(asset!(#paths)),*) }
             }
         }
     }
