@@ -10,6 +10,7 @@ repository = "https://github.com/machineonamission/dioxus_google_font_embedder"
 readme = "README.md"
 keywords = ["dioxus", "google-fonts", "macro", "compile-time", "embedding"]
 categories = ["gui", "web-programming"]
+exclude = ["img.png"]
 
 [lib]
 proc-macro = true
