@@ -1,7 +1,12 @@
 # dioxus_google_font_embedder
 
+[![Crates.io version](https://img.shields.io/crates/v/dioxus_google_font_embedder.svg)](https://crates.io/crates/dioxus_google_font_embedder)
+[![Download](https://img.shields.io/crates/d/dioxus_google_font_embedder.svg)](https://crates.io/crates/dioxus_google_font_embedder)
+
 Rust macro that automatically downloads, caches, and embeds Google Fonts into a Dioxus app at compile-time for offline
 usage
+
+[crates.io page](https://crates.io/crates/dioxus_google_font_embedder)
 
 ## The macro
 
@@ -12,7 +17,23 @@ CSS and font files from google fonts, caches them, and embeds them with the [dio
 `asset!()` macro](https://dioxuslabs.com/learn/0.7/essentials/ui/assets/) so they can be self-hosted (web) or used
 offline (desktop/mobile).
 
+## Installation
+
+```bash
+cargo add dioxus_google_font_embedder
+```
+
+or add
+
+```toml
+dioxus_google_font_embedder = "1.0.0"
+```
+
+to `Cargo.toml` (replace `1.0.0` with the latest version. `cargo add` does this for you)
+
 ## Usage
+
+### Google fonts URL
 
 - Go to [google fonts](https://fonts.google.com/)
 - find your font(s)
@@ -22,7 +43,11 @@ offline (desktop/mobile).
 
 ![img.png](img.png)
 
+### Macro
+
 - insert `{dioxus_google_font_embedder::embed_google_font!("<URL GOES HERE>")}` into your `rsx!`
+
+The macro returns a `style` tag, the macro works best at the root of your dioxus project (in your `App()` component, typically)
 
 ## Minimal Example
 
@@ -49,6 +74,9 @@ fn App() -> Element {
 ```
 
 ## Example macro output
+
+The following macro invocation:
+
 ```rs
 embed_google_font!("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap")
 ```
@@ -75,9 +103,9 @@ rsx! {
 }
 ```
 
-the `.css` file is a [`format!()` string](https://doc.rust-lang.org/std/fmt/) that inserts the `dx`-generated `asset!()` paths into the CSS `@font-face` declaration **at build time**.
+the `.css` file is CSS (specifying your font file(s)) and also a [`format!()` string](https://doc.rust-lang.org/std/fmt/) that inserts the `dx`-generated `asset!()` paths into the CSS `@font-face` declarations (your LOCALLY SERVED font files!) **at build time**.
 
-This will render as:
+This will render at runtume as:
 
 ```html
 <style>
@@ -120,4 +148,4 @@ This will render as:
 </style>
 ```
 
-which is a **locally served copy** of the google fonts CSS, with URLS also being locally served font files.
+Both this entire `style` tag and the `src:` font files are locally cached and rendered without requiring internet to access Google's API at runtime! 
