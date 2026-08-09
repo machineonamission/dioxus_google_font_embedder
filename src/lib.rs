@@ -24,7 +24,7 @@ fn cache_dir() -> PathBuf {
     cache_dir
 }
 
-fn expand(url: &str) -> proc_macro2::TokenStream {
+fn expand_google_font(url: &str) -> proc_macro2::TokenStream {
     let cache_dir = cache_dir();
 
     // download google fonts css, or serve from filesystem if cached
@@ -98,10 +98,93 @@ fn expand(url: &str) -> proc_macro2::TokenStream {
     }
 }
 
+/// downloads the necessary CSS and font files from google fonts, caches them, and embeds them with
+/// the [dioxus `asset!()` macro](https://dioxuslabs.com/learn/0.7/essentials/ui/assets/) so they
+/// can be self-hosted (web) or used offline (desktop/mobile).
+///
+/// # Arguments
+///
+/// * `input`: a string of a URL calling the [Google Fonts CSS API 2](https://developers.google.com/fonts/docs/css2),
+/// (which is easily obtainable via the [google fonts website](https://fonts.google.com/)). See
+/// crate README for documentation for obtaining this URL
+///
+/// # Examples
+///
+/// ```
+/// use dioxus::prelude::*;
+/// use dioxus_google_font_embedder::embed_google_font;
+///
+/// fn main() {
+///     dioxus::launch(App);
+/// }
+///
+/// #[component]
+/// fn App() -> Element {
+///     rsx! {
+///         {embed_google_font!("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap")}
+///         p {
+///             font_family: "Atkinson Hyperlegible Next",
+///             "This text will be rendered using a Google Font that is downloaded, cached, and embedded at compile time!"
+///         }
+///     }
+/// }
+/// ```
 #[proc_macro]
 pub fn embed_google_font(input: TokenStream) -> TokenStream {
     let url = syn::parse_macro_input!(input as LitStr).value();
-    expand(&url).into()
+    expand_google_font(&url).into()
+}
+
+
+fn expand_asset_url(url: &str) -> proc_macro2::TokenStream {
+    let cache_dir = cache_dir();
+    // download file and cache at compile time, return path
+    let cached_asset_path = cached_download(&*url, &cache_dir);
+
+    // format path relative to calling crate root (correct asset!() macro syntax)
+    let root_dir = root_dir();
+    let rel_path = cached_asset_path.strip_prefix(&root_dir).unwrap();
+    let path = format!("/{}", rel_path.display());
+
+    // insert asset call
+    quote! {
+        asset!(#path)
+    }
+}
+
+
+/// downloads the asset at the given URL and caches it at *compile time*, and returns a dioxus
+/// `asset!()` macro call, embedding the asset for offline/self-hosting use at runtime
+///
+/// # Arguments
+///
+/// * `input`: a string of a valid URL pointing to a file that will be downloaded to a file and served via `asset!()`
+///
+/// # Examples
+///
+/// ```
+/// use dioxus::prelude::*;
+/// use dioxus_google_font_embedder::asset_url;
+///
+/// fn main() {
+///     dioxus::launch(App);
+/// }
+///
+/// #[component]
+/// fn App() -> Element {
+///     rsx! {
+///         Stylesheet { href: asset_url!("https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/css/bootstrap.min.css") }
+///         p {
+///             "This page will have the Bootstrap CSS embedded at compile time, and will work offline!"
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn asset_url(input: TokenStream) -> TokenStream {
+    let url = syn::parse_macro_input!(input as LitStr).value();
+
+    expand_asset_url(&url).into()
 }
 
 #[cfg(test)]
@@ -110,9 +193,11 @@ mod tests {
 
     #[test]
     fn prints_output() {
-        let out = expand(
+        println!("{}", expand_google_font(
             "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap",
-        );
-        println!("{}", out);
+        ));
+        println!("{}", expand_asset_url(
+            "https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/css/bootstrap.min.css",
+        ));
     }
 }
