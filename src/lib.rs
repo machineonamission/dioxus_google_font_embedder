@@ -9,6 +9,7 @@ use regex::Regex;
 use std::fs;
 use std::path::PathBuf;
 use syn::LitStr;
+use url::Url;
 
 fn root_dir() -> PathBuf {
     // this should resolve to the root directory of the crate CALLING the macro (ie, where dioxus actually is)
@@ -37,9 +38,11 @@ fn expand_google_font(url: &str) -> proc_macro2::TokenStream {
     // saves to fs and then we re-read it. not a huge deal
     let css = fs::read_to_string(&csspath).unwrap();
 
-    // css url(): in this case, font files!
-    // claude wrote this regex cause who cares
-    let re = Regex::new(r#"url\(['"]?(https?://[^)'"]+)['"]?\)"#).unwrap();
+    let base = Url::parse(url).unwrap();
+
+    // widen the match: capture whatever's inside url(...), quoted or not,
+    // no longer requiring it to start with http(s)://
+    let re = Regex::new(r#"url\(['"]?([^)'"]+)['"]?\)"#).unwrap();
 
     // prep to be used as a format string, escape bracket literals
     let css = css.replace("{", "{{").replace("}", "}}");
@@ -50,10 +53,20 @@ fn expand_google_font(url: &str) -> proc_macro2::TokenStream {
     // find/replace closure, but eh it works
     let mut urls = Vec::<String>::new();
     let css = re.replace_all(&*css, |caps: &regex::Captures| {
-        let original_url = &caps[1];
-        urls.push(original_url.to_string());
-        //
-        "url({})"
+        let raw = &caps[1];
+
+        // leave data: URIs and #fragments alone — nothing to download, don't touch them
+        if raw.starts_with("data:") || raw.starts_with('#') {
+            return format!("url({raw})");
+        }
+
+        // resolves both cases correctly:
+        // - already absolute (https://...)   -> returned as-is
+        // - relative (./Foo.woff2, ../x.ttf) -> resolved against `base`
+        let resolved = base.join(raw).unwrap().to_string();
+        urls.push(resolved);
+
+        "url({})".to_string()
     });
 
     // i dont want to shit out the entire css file into the source tree (this is a MACRO after all!)
@@ -102,11 +115,16 @@ fn expand_google_font(url: &str) -> proc_macro2::TokenStream {
 /// the [dioxus `asset!()` macro](https://dioxuslabs.com/learn/0.7/essentials/ui/assets/) so they
 /// can be self-hosted (web) or used offline (desktop/mobile).
 ///
+/// **Warning:** This may noticably slow the first compile, and will require an internet connection
+/// on first run as it's fetching files from google, but should speed up after
+///
 /// # Arguments
 ///
 /// * `input`: a string of a URL calling the [Google Fonts CSS API 2](https://developers.google.com/fonts/docs/css2),
 /// (which is easily obtainable via the [google fonts website](https://fonts.google.com/)). See
 /// crate README for documentation for obtaining this URL
+///
+/// Supports any kind of CSS file containing @font-face declarations, including url() with relative paths!
 ///
 /// # Examples
 ///
@@ -195,6 +213,9 @@ mod tests {
     fn prints_output() {
         println!("{}", expand_google_font(
             "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,200..800;1,200..800&family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap",
+        ));
+        println!("{}", expand_google_font(
+            "https://github.com/machineonamission/moamsans/releases/latest/download/moamsans.css",
         ));
         println!("{}", expand_asset_url(
             "https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/css/bootstrap.min.css",
