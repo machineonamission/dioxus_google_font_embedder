@@ -1,5 +1,3 @@
-#![feature(str_as_str)]
-
 mod cached_download;
 
 use crate::cached_download::cached_download;
@@ -78,7 +76,7 @@ fn expand_google_font(url: &str) -> proc_macro2::TokenStream {
     // if we write to the file despite it not changing, the dioxus cli freaks out and hot reloads.
     // so, if this exists, its fucking deterministic and we dont need to overwrite to fs who cares
     if !css_format_file.exists() {
-        fs::write(&css_format_file, css.as_str()).unwrap();
+        fs::write(&css_format_file, &*css).unwrap();
     }
 
     let root_dir = root_dir();
